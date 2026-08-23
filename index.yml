@@ -20,7 +20,7 @@
   name: Performer Image Search
   metadata:
     description: Fork of CarrotWaxr's performerImageSearch, adds a "Save to Gallery" action that writes into the same shared folder/tag/gallery system as Performer Gallery Sync, tagged by source.
-  version: 1.4.1
-  date: 2026-08-23 14:40:00
+  version: 1.4.2
+  date: 2026-08-23 14:36:00
   path: PerformerImageSearch.zip
-  sha256: ad7d5e880c479a4403aef30ea8aa64c4b8713e3846978fdcee8eb46f5917b840
+  sha256: b7f545e4eb39ad38e30519bd3c66afb2c6de8cd7269ad4adbf78bedb21531298
