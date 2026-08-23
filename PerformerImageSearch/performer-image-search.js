@@ -277,6 +277,36 @@
   }
 
   /**
+   * Set a performer's secondary image (alt_image custom field), the same
+   * field the SecondaryPerformerImage plugin reads to render its flip button.
+   * Same direct-assign flow as setPerformerImage, just a different target field.
+   */
+  async function setSecondaryPerformerImage(performerId, imageUrl) {
+    try {
+      const query = `
+        mutation PerformerUpdate($input: PerformerUpdateInput!) {
+          performerUpdate(input: $input) {
+            id
+            custom_fields
+          }
+        }
+      `;
+
+      const data = await graphqlRequest(query, {
+        input: {
+          id: performerId,
+          custom_fields: { partial: { alt_image: imageUrl } },
+        },
+      });
+
+      return data?.performerUpdate;
+    } catch (e) {
+      console.error("[PerformerImageSearch] Failed to set secondary image:", e);
+      throw e;
+    }
+  }
+
+  /**
    * Save image into the shared Performer Gallery Sync folder/gallery/tag system
    * via a runPluginOperation call to this plugin's own Python backend, which
    * writes the file + index.json sidecar into performerGallerySync's configured
@@ -417,6 +447,7 @@
           <div id="pis-preview-dims" class="pis-preview-dims"></div>
           <div class="pis-preview-actions">
             <button id="pis-confirm-btn" class="pis-btn pis-btn-primary" onclick="window.pisConfirmImage()">Set as Performer Image</button>
+            <button id="pis-secondary-btn" class="pis-btn pis-btn-tertiary" onclick="window.pisConfirmSecondaryImage()">Set as Secondary Image</button>
             <button id="pis-gallery-btn" class="pis-btn pis-btn-secondary" onclick="window.pisSaveToGallery()">Save to Gallery</button>
             <button class="pis-btn" onclick="window.pisClosePreview()">Cancel</button>
           </div>
@@ -769,6 +800,46 @@
         confirmBtn.disabled = false;
         confirmBtn.textContent = originalText;
         confirmBtn.classList.remove("pis-btn-loading");
+      }
+    }
+  };
+
+  /**
+   * Confirm and set the previewed image as the performer's secondary image
+   * (alt_image custom field), mirroring pisConfirmImage's flow exactly.
+   */
+  window.pisConfirmSecondaryImage = async function () {
+    if (!previewImage || !currentPerformerId) return;
+
+    const secondaryBtn = document.getElementById("pis-secondary-btn");
+    const originalText = secondaryBtn?.textContent;
+
+    if (secondaryBtn) {
+      secondaryBtn.disabled = true;
+      secondaryBtn.textContent = "Saving...";
+      secondaryBtn.classList.add("pis-btn-loading");
+    }
+
+    showStatus("Setting secondary image...", "loading");
+
+    try {
+      await setSecondaryPerformerImage(currentPerformerId, previewImage);
+      showStatus("Secondary image set successfully!", "success");
+
+      if (secondaryBtn) {
+        secondaryBtn.textContent = "Saved!";
+      }
+
+      setTimeout(() => {
+        hideModal();
+        window.location.reload();
+      }, 1000);
+    } catch (e) {
+      showStatus(`Failed to set secondary image: ${e.message}`, "error");
+      if (secondaryBtn) {
+        secondaryBtn.disabled = false;
+        secondaryBtn.textContent = originalText;
+        secondaryBtn.classList.remove("pis-btn-loading");
       }
     }
   };

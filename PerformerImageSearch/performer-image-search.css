@@ -160,6 +160,16 @@
   border-color: #146c43;
 }
 
+.pis-btn-tertiary {
+  background: #6f42c1;
+  border-color: #6f42c1;
+}
+
+.pis-btn-tertiary:hover {
+  background: #59339d;
+  border-color: #4e2d89;
+}
+
 .pis-btn-loading {
   opacity: 0.7;
   cursor: wait;
