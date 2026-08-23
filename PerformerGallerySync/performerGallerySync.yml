@@ -18,7 +18,7 @@ settings:
 
 hooks:
   - name: modify performer
-    description: Download galleries on performer update if the [Performer Gallery Sync] tag is applied
+    description: Download galleries on performer update if the [performer gallery] tag is applied
     triggeredBy:
       - Performer.Update.Post
   - name: image add
@@ -26,13 +26,13 @@ hooks:
     triggeredBy:
       - Image.Create.Post
   - name: set profile images
-    description: Set profile images by adding the [Set Profile Pic] tag to the image, there must be exactly 1 performer tagged on the image.
+    description: Set profile images py adding the [Set Profile Pic] tag to the image, there must be exactly 1 performer tagged on the image.
     triggeredBy:
       - Image.Update.Post
 
 tasks:
   - name: "Process Performers"
-    description: Fetch performer images for performers with the [Performer Gallery Sync] tag
+    description: Fetch performer images for performers with the [performer gallery] tag
     defaultArgs:
       mode: processPerformers
   - name: "relink missing images"
