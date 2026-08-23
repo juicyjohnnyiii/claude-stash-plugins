@@ -1,0 +1,11 @@
+name: PornGals4 Gallery Sync
+description: Fork of Serechops' performerGallery scraper for porngals4.com - rewired into the shared Performer Gallery Sync folder/tag/gallery system instead of standalone zip files, and opt-in via the [Performer Gallery Sync] tag instead of scraping every performer by default.
+version: 1.0.0
+url: https://github.com/juicyjohnnyiii/claude-stash-plugins
+exec:
+  - python
+  - "{pluginDir}/porngals4.py"
+interface: raw
+tasks:
+  - name: "Scrape Performers"
+    description: Scrape porngals4.com galleries for performers tagged [Performer Gallery Sync]
