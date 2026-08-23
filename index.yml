@@ -1,0 +1,10 @@
+- id: ClaudeTaggerTools
+  name: Claude Tagger Tools
+  metadata:
+    description: Adds "Accept All Tags" and "Delete from Disk" buttons to the Scene Tagger interface.
+  version: 0.1.0
+  date: 2026-08-23 12:02:50
+  path: ClaudeTaggerTools.zip
+  sha256: d5225bd36e5aeeb97ccb1d084d1a9ed9e6aaa92c9246a2abfc6675ee52d466f4
+  requires:
+    - stashUserscriptLibrary7dJx1qPFork
