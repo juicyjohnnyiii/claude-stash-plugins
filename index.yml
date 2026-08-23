@@ -6,3 +6,12 @@
   date: 2026-08-23 12:02:50
   path: ClaudeTaggerTools.zip
   sha256: d5225bd36e5aeeb97ccb1d084d1a9ed9e6aaa92c9246a2abfc6675ee52d466f4
+
+- id: PerformerGallerySync
+  name: Performer Gallery Sync
+  metadata:
+    description: Fork of stashdb-performer-gallery with custom tag names ([Performer Gallery Sync] / [Set Profile Pic] instead of the originals) - downloads performer images from configured stash-boxes into a gallery.
+  version: 0.3.0
+  date: 2026-08-23 14:14:00
+  path: PerformerGallerySync.zip
+  sha256: 5a02f1846705f4da6bf76eeacdf293ba200b11eb69a86461f94498121bcae50b
