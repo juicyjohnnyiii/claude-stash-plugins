@@ -13,7 +13,8 @@
 
     document.body.appendChild(document.createElement('style')).textContent = `
     .cropper-view-box img { transition: none; }
-    .detail-header-image { flex-direction: column; }
+    .detail-header-image { flex-direction: column; height: auto !important; }
+    .perf-images { flex-shrink: 0; }
     `;
 
     let cropping = false;
