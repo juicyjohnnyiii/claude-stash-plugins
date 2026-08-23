@@ -13,8 +13,8 @@
 
     document.body.appendChild(document.createElement('style')).textContent = `
     .cropper-view-box img { transition: none; }
-    .detail-header-image { flex-direction: column; height: auto !important; }
-    .perf-images { flex-shrink: 0; }
+    .detail-header-image { position: relative; }
+    #crop-btn-container { position: absolute; left: 0; }
     `;
 
     let cropping = false;
@@ -67,11 +67,23 @@
         const cropBtnContainer = document.createElement('div');
         cropBtnContainer.setAttribute("id", cropBtnContainerId);
         // Insert into the actual .detail-header-image ancestor (found via
-        // closest(), not a hardcoded parentElement.parentElement) so it lays
-        // out correctly whether or not SecondaryPerformerImage's extra
-        // .perf-images/.primary-image/.secondary-image wrapper divs are present.
+        // closest(), not a hardcoded parentElement.parentElement) so it works
+        // whether or not SecondaryPerformerImage's extra .perf-images wrapper
+        // divs are present. Positioned absolutely (not flex-column flow) and
+        // placed via a live measurement of the image's own rendered bottom
+        // edge, so it can never affect that container's own height/flex
+        // sizing - which is exactly what previously pushed the flip button's
+        // (also absolutely-positioned, anchored to that same container) native
+        // bottom-right corner placement out of position as a side effect.
         const headerImage = image.closest('.detail-header-image') || image.parentElement.parentElement;
         headerImage.appendChild(cropBtnContainer);
+        const positionCropBtnContainer = () => {
+            const headerRect = headerImage.getBoundingClientRect();
+            const imgRect = image.getBoundingClientRect();
+            cropBtnContainer.style.top = (imgRect.bottom - headerRect.top + 8) + 'px';
+        };
+        positionCropBtnContainer();
+        window.addEventListener('resize', positionCropBtnContainer);
 
         const cropInfo = document.createElement('p');
 
