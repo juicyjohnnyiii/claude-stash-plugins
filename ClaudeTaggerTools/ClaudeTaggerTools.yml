@@ -1,0 +1,9 @@
+name: Claude Tagger Tools
+description: Adds "Accept All Tags" and "Delete from Disk" buttons to the Scene Tagger interface.
+version: 0.1.0
+url: https://github.com/juicyjohnnyiii/claude-stash-plugins
+ui:
+  requires:
+  - stashUserscriptLibrary7dJx1qPFork
+  javascript:
+  - ClaudeTaggerTools.js
