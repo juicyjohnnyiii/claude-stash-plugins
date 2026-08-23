@@ -1,0 +1,59 @@
+name: Performer Image Search
+description: Fork of CarrotWaxr's performerImageSearch, adds a "Save to Gallery" action that writes into the same shared folder/tag/gallery system as Performer Gallery Sync, tagged by source.
+version: 1.4.0
+url: https://github.com/juicyjohnnyiii/claude-stash-plugins
+
+# UI plugin - injects button and modal on performer pages
+ui:
+  javascript:
+    - performer-image-search.js
+  css:
+    - performer-image-search.css
+
+# Plugin settings configurable in Stash UI (Settings > Plugins)
+# Note: Stash doesn't support YAML defaults. Defaults are handled in JavaScript code.
+# All source toggles default to enabled (true) when not explicitly set.
+settings:
+  defaultSearchSuffix:
+    displayName: Default Search Suffix
+    description: Text appended to performer name when searching (e.g., "pornstar solo"). Default is "pornstar".
+    type: STRING
+  defaultLayout:
+    displayName: Default Layout
+    description: Default aspect ratio filter (All, Portrait, Landscape, Square). Default is "All".
+    type: STRING
+  # Source toggles - all enabled by default (handled in JS code)
+  enableBabepedia:
+    displayName: Enable Babepedia
+    description: Female performers only. Curated photos. Enabled by default.
+    type: BOOLEAN
+  enablePornPics:
+    displayName: Enable PornPics
+    description: Mainstream performers. Has male performers. Enabled by default.
+    type: BOOLEAN
+  enableFreeOnes:
+    displayName: Enable FreeOnes
+    description: Large database with male and trans performers. Enabled by default.
+    type: BOOLEAN
+  enableEliteBabes:
+    displayName: Enable EliteBabes
+    description: Female performers only. High-quality photosets. Enabled by default.
+    type: BOOLEAN
+  enableBoobpedia:
+    displayName: Enable Boobpedia
+    description: Female performers only. Wiki-style database. Enabled by default.
+    type: BOOLEAN
+  enableJavDatabase:
+    displayName: Enable JavDatabase
+    description: Japanese adult video performers. Enabled by default.
+    type: BOOLEAN
+  enableDuckDuckGo:
+    displayName: Enable DuckDuckGo Images
+    description: Fallback search with SafeSearch off. Works for all performer types. Enabled by default.
+    type: BOOLEAN
+
+# Python backend for image search (called via runPluginOperation from JS)
+exec:
+  - python
+  - "{pluginDir}/image_search.py"
+interface: raw
