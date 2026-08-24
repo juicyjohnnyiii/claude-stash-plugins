@@ -455,19 +455,25 @@ def processQueue():
 
 
 def relink_images(performer_id=None):
+    # PERF FIX (2026-08-24): the performer_id branch used to scope only by
+    # path, which matches every image ever downloaded for that performer
+    # across every prior sync run (1787 images for a real performer on this
+    # instance) instead of just the newly-scanned-in ones needing a gallery
+    # link. Added is_missing:"galleries" to both branches - once an image is
+    # relinked (processImages sets gallery_ids via update_image) it has a
+    # gallery attached and naturally drops out of this filter on the next
+    # run, so relink stays O(new images) instead of O(all images ever).
     query = {
         "path": {"modifier": "INCLUDES", "value": settings["path"]},
+        "is_missing": "galleries",
     }
     if performer_id == None:
-        query["is_missing"] = "galleries"
         query["path"] = {"modifier": "INCLUDES", "value": settings["path"]}
     else:
         query["path"] = {
             "modifier": "INCLUDES",
             "value": str(Path(settings["path"]) / performer_id / ""),
         }
-    #    else:
-    #        query["file_count"] = {"modifier": "NOT_EQUALS", "value": 1}
 
     total = stash.find_images(f=query, get_count=True)[0]
     i = 0
