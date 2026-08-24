@@ -60,10 +60,19 @@ def processPerformer(stash, path, tag_id, performer):
         index["galleries"][endpoint_key] = gal
         modified = True
 
+    # Shared exclusion file with performerGallerySync (same performer_dir) -
+    # a deleted image's source url ends up here via that plugin's
+    # Image.Destroy.Post hook, keyed by url since our own local filenames
+    # are random uuids with no stable identity across scrapes.
+    excluded_file = performer_dir / "excluded.json"
+    excluded = set(json.loads(excluded_file.read_text())) if excluded_file.exists() else set()
+
     galleries = scrapePerformer(slug)
     downloaded = 0
     for gallery in galleries:
         for image_url in getGallery(gallery, slug):
+            if image_url in excluded:
+                continue
             image_id = str(uuid.uuid4())
             image_index = performer_dir / f"{image_id}.json"
             filename = performer_dir / f"{image_id}.jpg"
