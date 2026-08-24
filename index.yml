@@ -11,10 +11,10 @@
   name: Performer Gallery Sync
   metadata:
     description: Fork of stashdb-performer-gallery with custom tag names ([Performer Gallery Sync] / [Set Profile Pic] instead of the originals) - downloads performer images from configured stash-boxes into a gallery.
-  version: 0.3.1
-  date: 2026-08-23 14:20:00
+  version: 0.3.2
+  date: 2026-08-24 08:30:00
   path: PerformerGallerySync.zip
-  sha256: 08ccdbe8eb0a1c0507725b446449dbfac3f68982a83e7e3d5ba8395bf76773d3
+  sha256: 39a0c7411d2d16d18e89257873b3527ae4ef20ede82b1ab2d2159aa7c4dfb94c
 
 - id: PerformerImageSearch
   name: Performer Image Search

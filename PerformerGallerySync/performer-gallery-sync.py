@@ -425,14 +425,28 @@ def relink_images(performer_id=None):
 
     total = stash.find_images(f=query, get_count=True)[0]
     i = 0
+    page = 1
     images = []
+    # BUG FIX (2026-08-24): upstream used the cumulative processed-image
+    # counter `i` as the page number instead of a real page counter. Once i
+    # exceeded the real page count, every subsequent find_images call
+    # returned an empty page, the for-loop never ran, i never advanced, and
+    # `while i < total` spun forever hammering the GraphQL API - confirmed
+    # live (a stuck python process with progress frozen at a fixed fraction,
+    # flooding /graphql with rapid empty-result calls). Tracking page
+    # separately, and breaking out if a page ever comes back empty, so this
+    # can never infinite-loop again even if the count math is off elsewhere.
     while i < total:
-        images = stash.find_images(f=query, filter={"page": i, "per_page": per_page})
+        images = stash.find_images(f=query, filter={"page": page, "per_page": per_page})
+        if not images:
+            log.warning(f"relink_images: page {page} returned no images with {i}/{total} processed - stopping early")
+            break
         for img in images:
             log.debug("image: %s" % (img,))
             processImages(img)
             i = i + 1
             log.progress((i / total))
+        page += 1
 
 
 json_input = json.loads(sys.stdin.read())
