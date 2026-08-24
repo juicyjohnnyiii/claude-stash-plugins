@@ -54,6 +54,7 @@
   let completedSources = []; // Track which sources have completed
   let pendingSources = []; // Track which sources are still loading
   let sourceErrors = []; // Track per-source failures: { source, message }
+  let selectedIndexes = new Set(); // originalIndex values checked in the results grid
 
   /**
    * Get the GraphQL endpoint URL
@@ -384,6 +385,7 @@
     completedSources = [];
     pendingSources = [];
     sourceErrors = [];
+    selectedIndexes = new Set();
   }
 
   /**
@@ -429,6 +431,11 @@
           </div>
 
           <div class="pis-modal-body">
+            <div id="pis-bulk-actions" class="pis-bulk-actions" style="display: none;">
+              <span id="pis-bulk-count">0 selected</span>
+              <button id="pis-bulk-gallery-btn" class="pis-btn pis-btn-secondary" onclick="window.pisAddSelectedToGallery()">Add Selected to Gallery</button>
+              <button class="pis-btn" onclick="window.pisClearSelection()">Clear</button>
+            </div>
             <div id="pis-results" class="pis-results">
               <div class="pis-placeholder">Enter a search query and click Search</div>
             </div>
@@ -569,6 +576,7 @@
     completedSources = [];
     pendingSources = [...SOURCES];
     sourceErrors = [];
+    selectedIndexes = new Set();
     isLoading = true;
 
     console.debug(`[PerformerImageSearch] Starting search for: "${query}" (performer: ${currentPerformerName})`);
@@ -651,8 +659,12 @@
     resultsContainer.innerHTML = filteredWithIndex
       .map(
         ({ result, originalIndex }) => {
+          const isSelected = selectedIndexes.has(originalIndex);
           return `
-        <div class="pis-result-item" onclick="window.pisShowPreview(${originalIndex})">
+        <div class="pis-result-item${isSelected ? " pis-selected" : ""}" onclick="window.pisShowPreview(${originalIndex})">
+          <div class="pis-select-checkbox" onclick="window.pisToggleSelect(${originalIndex}, event)">
+            <input type="checkbox" ${isSelected ? "checked" : ""} readonly />
+          </div>
           <img
             src="${escapeHtml(result.thumbnail)}"
             alt="${escapeHtml(result.title)}"
@@ -669,6 +681,94 @@
       )
       .join("");
   }
+
+  /**
+   * Toggle selection of a result thumbnail without opening the preview
+   */
+  window.pisToggleSelect = function (originalIndex, event) {
+    if (event) event.stopPropagation();
+
+    if (selectedIndexes.has(originalIndex)) {
+      selectedIndexes.delete(originalIndex);
+    } else {
+      selectedIndexes.add(originalIndex);
+    }
+
+    renderResults();
+    updateBulkActionsBar();
+  };
+
+  /**
+   * Clear all selected thumbnails
+   */
+  window.pisClearSelection = function () {
+    selectedIndexes = new Set();
+    renderResults();
+    updateBulkActionsBar();
+  };
+
+  /**
+   * Show/hide and update the count on the bulk-actions bar
+   */
+  function updateBulkActionsBar() {
+    const bar = document.getElementById("pis-bulk-actions");
+    const countEl = document.getElementById("pis-bulk-count");
+    if (!bar || !countEl) return;
+
+    const count = selectedIndexes.size;
+    countEl.textContent = `${count} selected`;
+    bar.style.display = count > 0 ? "flex" : "none";
+  }
+
+  /**
+   * Batch-save every currently-selected result into the shared performer
+   * gallery, reusing the same saveImageToGallery() call the single-image
+   * "Save to Gallery" preview button already makes - just looped.
+   */
+  window.pisAddSelectedToGallery = async function () {
+    if (!currentPerformerId || selectedIndexes.size === 0) return;
+
+    const bulkBtn = document.getElementById("pis-bulk-gallery-btn");
+    const indexes = [...selectedIndexes];
+    const total = indexes.length;
+    let succeeded = 0;
+    let failed = 0;
+
+    if (bulkBtn) {
+      bulkBtn.disabled = true;
+      bulkBtn.classList.add("pis-btn-loading");
+    }
+
+    for (let i = 0; i < indexes.length; i++) {
+      const result = allResults[indexes[i]];
+      if (!result) continue;
+
+      showStatus(`Saving ${i + 1} of ${total} to gallery...`, "loading");
+
+      try {
+        await saveImageToGallery(currentPerformerId, result.image, result.source);
+        succeeded++;
+      } catch (e) {
+        console.error("[PerformerImageSearch] Bulk save failed for", result.image, e);
+        failed++;
+      }
+    }
+
+    selectedIndexes = new Set();
+    renderResults();
+    updateBulkActionsBar();
+
+    if (bulkBtn) {
+      bulkBtn.disabled = false;
+      bulkBtn.classList.remove("pis-btn-loading");
+    }
+
+    if (failed === 0) {
+      showStatus(`Saved ${succeeded} image${succeeded === 1 ? "" : "s"} to gallery!`, "success");
+    } else {
+      showStatus(`Saved ${succeeded} of ${total} to gallery (${failed} failed - see console)`, "error");
+    }
+  };
 
   /**
    * Show full-size image preview

@@ -265,6 +265,47 @@
   text-align: center;
 }
 
+/* Selection checkbox overlay on each result thumbnail */
+.pis-select-checkbox {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pis-select-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  pointer-events: none; /* the wrapping div's onclick handles the toggle */
+}
+
+.pis-result-item.pis-selected {
+  outline: 3px solid #0d6efd;
+  outline-offset: -3px;
+}
+
+/* Bulk-actions bar (shown once at least one image is checked) */
+.pis-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #333;
+  color: #ddd;
+  font-size: 14px;
+}
+
 /* Modal Footer */
 .pis-modal-footer {
   display: flex;
