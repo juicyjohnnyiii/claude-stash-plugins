@@ -29,10 +29,10 @@
   name: Stash Performer Image Cropper
   metadata:
     description: Fork of DogmaDragon's cropper - fixes it targeting/positioning against whichever image (primary or secondary) is currently active, and saving to the correct field accordingly.
-  version: 0.4.2
-  date: 2026-08-23 16:00:00
+  version: 0.4.3
+  date: 2026-08-24 10:40:00
   path: StashPerformerImageCropper.zip
-  sha256: 9a7d0dbc727e78d9e026073fb03496874df271c2b820d6f60502a8ecc22f9a7a
+  sha256: 7a62565523e6831dcfec2ba34e6aa775e54dedb7fc42f5cc2ac68558794b93e9
   requires:
     - stashUserscriptLibrary7dJx1qPFork
 

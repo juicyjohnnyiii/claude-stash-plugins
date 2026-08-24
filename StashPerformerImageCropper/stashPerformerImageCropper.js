@@ -14,7 +14,28 @@
     document.body.appendChild(document.createElement('style')).textContent = `
     .cropper-view-box img { transition: none; }
     .detail-header-image { position: relative; }
-    #crop-btn-container { position: absolute; left: 0; }
+    /* Overlay directly on the image (bottom-left corner, mirroring the
+       SecondaryPerformerImage flip button's bottom-right placement) instead
+       of floating below it - a below-image position had to be computed from
+       the image's live rendered height, and .detail-header's own
+       overflow:hidden + JS-measured fixed height (set from in-flow content
+       only, which this absolutely-positioned block never contributes to)
+       could clip it or push it out of the visible area entirely on tall
+       portrait images. Anchoring to the image's own corner sidesteps that
+       whole class of problem - it can never fall outside the image's box. */
+    #crop-btn-container {
+        position: absolute;
+        left: 8px;
+        bottom: 8px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.55);
+        padding: 4px 6px;
+        border-radius: 6px;
+    }
+    #crop-btn-container p { margin: 0; color: #fff; font-size: 12px; }
     `;
 
     let cropping = false;
@@ -77,13 +98,6 @@
         // bottom-right corner placement out of position as a side effect.
         const headerImage = image.closest('.detail-header-image') || image.parentElement.parentElement;
         headerImage.appendChild(cropBtnContainer);
-        const positionCropBtnContainer = () => {
-            const headerRect = headerImage.getBoundingClientRect();
-            const imgRect = image.getBoundingClientRect();
-            cropBtnContainer.style.top = (imgRect.bottom - headerRect.top + 8) + 'px';
-        };
-        positionCropBtnContainer();
-        window.addEventListener('resize', positionCropBtnContainer);
 
         const cropInfo = document.createElement('p');
 
