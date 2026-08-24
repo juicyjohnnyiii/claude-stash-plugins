@@ -78,6 +78,75 @@ FRAGMENT_IMAGE = """
 """
 
 
+def excluded_file_for(performer_id):
+    return Path(settings["path"]) / performer_id / "excluded.json"
+
+
+def load_excluded(performer_id):
+    f = excluded_file_for(performer_id)
+    if f.exists():
+        try:
+            return set(json.loads(f.read_text()))
+        except (json.JSONDecodeError, OSError):
+            return set()
+    return set()
+
+
+def save_excluded(performer_id, excluded_set):
+    f = excluded_file_for(performer_id)
+    f.write_text(json.dumps(sorted(excluded_set)))
+
+
+def handle_image_destroyed(image_id):
+    """Image.Destroy.Post fires after the Image record is already gone from
+    Stash's DB, so we can't query it for the source url we'd need to
+    exclude. Instead scan our own on-disk sidecars (written by
+    processPerformerStashid/porngals4, and stamped with Stash's internal id
+    by processImages once relinked - see the PERSIST FIX there) for the one
+    matching this deleted id, and pull its "urls" list from there.
+
+    Excluding by source URL (not by local filename/id) is deliberate: it's
+    the one identifier both PerformerGallerySync's stash-box downloads AND
+    PornGals4's scraped downloads always have, and it's stable even though
+    PornGals4 generates a fresh random local filename every scrape. A merged
+    multi-file image (Stash dedupes identical content into one Image record
+    with several visual_files) gets ALL of its source urls excluded, not
+    just one, since deleting the merged image means the user doesn't want
+    any of the sources that produced it either.
+    """
+    base = Path(settings["path"])
+    if not base.exists():
+        return
+    for performer_dir in base.iterdir():
+        if not performer_dir.is_dir():
+            continue
+        matched = False
+        excluded = load_excluded(performer_dir.name)
+        for sidecar in performer_dir.glob("*.json"):
+            if sidecar.name in ("index.json", "excluded.json"):
+                continue
+            try:
+                data = json.loads(sidecar.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            if str(data.get("id")) == str(image_id):
+                matched = True
+                for url in data.get("urls", []):
+                    excluded.add(url)
+                log.info(
+                    "Excluded urls %s for performer %s from future downloads (deleted in Stash)"
+                    % (data.get("urls", []), performer_dir.name)
+                )
+                # Clean up the now-stale sidecar/file so a later relink pass
+                # doesn't try to re-attach a record that no longer exists.
+                sidecar.unlink(missing_ok=True)
+                (sidecar.with_suffix(".jpg")).unlink(missing_ok=True)
+        if matched:
+            save_excluded(performer_dir.name, excluded)
+            return
+    log.debug("handle_image_destroyed: no local sidecar found for deleted image %s" % (image_id,))
+
+
 def processImages(img):
     log.debug("image: %s" % (img,))
     image_data = None
@@ -89,11 +158,20 @@ def processImages(img):
                 log.debug("loading index file %s" % (index_file,))
                 with open(index_file) as f:
                     index = json.load(f)
-                    index["id"] = img["id"]
-                    if image_data:
-                        image_data["gallery_ids"].extend(index["gallery_ids"])
-                    else:
-                        image_data = index
+                index["id"] = img["id"]
+                # PERSIST FIX (2026-08-24): this used to only set index["id"]
+                # in memory and never write it back to the sidecar file -
+                # meaning the on-disk .json never actually recorded which
+                # Stash image it belongs to. Without this, handle_image_
+                # destroyed() (Image.Destroy.Post hook) has no way to find
+                # the sidecar for a deleted image after the fact, since the
+                # Image record itself is already gone by then.
+                with open(index_file, "w") as f:
+                    json.dump(index, f)
+                if image_data:
+                    image_data["gallery_ids"].extend(index["gallery_ids"])
+                else:
+                    image_data = index
     if image_data:
         #        log.debug(image_data)
         stash.update_image(image_data)
@@ -234,7 +312,10 @@ def processPerformerStashid(endpoint, stashid, p):
             with open(index_file, "w") as f:
                 json.dump(index, f)
 
+        excluded = load_excluded(p["id"])
         for img in perf["images"]:
+            if img["url"] in excluded:
+                continue
             image_index = Path(settings["path"]) / p["id"] / (img["id"] + ".json")
             if not image_index.exists():
                 with open(image_index, "w") as f:
@@ -548,6 +629,8 @@ elif "hookContext" in json_input["args"]:
         img = stash.find_image(image_in=id, fragment=FRAGMENT_IMAGE)
         if tag_performer_image in [x["id"] for x in img["tags"]]:
             setPerformerPicture(img)
+    if json_input["args"]["hookContext"]["type"] == "Image.Destroy.Post":
+        handle_image_destroyed(id)
     if json_input["args"]["hookContext"]["type"] == "Performer.Update.Post":
         p = stash.find_performer(id)
         pname = p["name"] if p else id
