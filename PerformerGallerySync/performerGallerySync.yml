@@ -32,6 +32,10 @@ hooks:
     description: Set profile images py adding the [Set Profile Pic] tag to the image, there must be exactly 1 performer tagged on the image.
     triggeredBy:
       - Image.Update.Post
+  - name: exclude deleted images
+    description: When an image is deleted in Stash, record it so future syncs don't re-download it.
+    triggeredBy:
+      - Image.Destroy.Post
 
 tasks:
   - name: "Process Performers"
