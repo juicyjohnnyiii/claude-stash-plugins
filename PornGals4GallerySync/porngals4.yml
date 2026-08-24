@@ -6,6 +6,9 @@ exec:
   - python
   - "{pluginDir}/porngals4.py"
 interface: raw
+ui:
+  javascript:
+    - porngals4-button.js
 tasks:
   - name: "Scrape Performers"
     description: Scrape porngals4.com galleries for performers tagged [Performer Gallery Sync]

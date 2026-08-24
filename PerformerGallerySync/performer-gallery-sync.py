@@ -15,6 +15,40 @@ request_s = requests.Session()
 stash_boxes = {}
 scrapers = {}
 
+
+def run_plugin_task_named(stash, plugin_id, task_name, description, args=None):
+    """Same as stash.run_plugin_task(), but also sets the queued job's
+    description (shown in Settings > Tasks) - the stashapi wrapper for
+    run_plugin_task hardcodes the mutation without a description field, so
+    this calls the same mutation directly via call_GQL to add it. Lets a
+    per-performer job show which performer it's actually working on instead
+    of a generic "relink missing images" for every entry in a bulk run.
+    """
+    query = """mutation RunPluginTask($plugin_id: ID!, $task_name: String!, $description: String, $args: [PluginArgInput!]) {
+        runPluginTask(plugin_id: $plugin_id, task_name: $task_name, description: $description, args: $args)
+    }"""
+    args_list = []
+    for k, v in (args or {}).items():
+        if isinstance(v, bool):
+            value = {"b": v}
+        elif isinstance(v, int):
+            value = {"i": v}
+        elif isinstance(v, float):
+            value = {"f": v}
+        elif isinstance(v, str):
+            value = {"str": v}
+        else:
+            continue
+        args_list.append({"key": k, "value": value})
+
+    variables = {
+        "plugin_id": plugin_id,
+        "task_name": task_name,
+        "description": description,
+        "args": args_list,
+    }
+    return stash.call_GQL(query, variables)["runPluginTask"]
+
 FRAGMENT_IMAGE = """
     id
     title
@@ -95,9 +129,11 @@ def processPerformer(performer):
     # (this is exactly what happened to Riley Reid's images during the
     # 2026-08-24 queue-congestion incident, before this fix).
     stash.metadata_scan(paths=[str(dir)])
-    stash.run_plugin_task(
+    run_plugin_task_named(
+        stash,
         "performerGallerySync",
         "relink missing images",
+        description=f"relink missing images - {performer['name']}",
         args={"performer_id": performer["id"]},
     )
 
@@ -507,6 +543,12 @@ elif "hookContext" in json_input["args"]:
         if tag_performer_image in [x["id"] for x in img["tags"]]:
             setPerformerPicture(img)
     if json_input["args"]["hookContext"]["type"] == "Performer.Update.Post":
-        stash.run_plugin_task(
-            "performerGallerySync", "Process Performers", args={"performer": id}
+        p = stash.find_performer(id)
+        pname = p["name"] if p else id
+        run_plugin_task_named(
+            stash,
+            "performerGallerySync",
+            "Process Performers",
+            description=f"Process Performers - {pname}",
+            args={"performer": id},
         )

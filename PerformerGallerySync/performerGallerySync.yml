@@ -6,6 +6,9 @@ exec:
   - python
   - "{pluginDir}/performer-gallery-sync.py"
 interface: raw
+ui:
+  javascript:
+    - performer-gallery-sync-button.js
 settings:
   path:
     displayName: Download parent folder

@@ -113,6 +113,18 @@ def main():
 
     tag_id = stash.find_tag("[Performer Gallery Sync]", create=True).get("id")
 
+    args = json_input.get("args", {})
+
+    # Single-performer mode, mirroring performerGallerySync's own
+    # mode=performer dispatch - lets a per-performer UI button run just one
+    # performer instead of the whole tagged pool.
+    if args.get("mode") == "performer" and "performer" in args:
+        performer = stash.find_performer(args["performer"])
+        if performer and tag_id in [t["id"] for t in performer["tags"]]:
+            log.progress(1)
+            processPerformer(stash, path, tag_id, performer)
+        return
+
     # Opt-in via the same tag performerGallerySync uses, consistent with the
     # rest of the shared system - this does NOT scrape every performer by
     # default the way the original plugin did.
