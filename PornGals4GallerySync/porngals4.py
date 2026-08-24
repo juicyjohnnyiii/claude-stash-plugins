@@ -89,6 +89,14 @@ def processPerformer(stash, path, tag_id, performer):
 
     log.info(f"{performer['name']}: downloaded {downloaded} new porngals4 image(s)")
 
+    if downloaded:
+        # Scan after each performer instead of only once at the very end -
+        # a crash/interrupt partway through a multi-performer run otherwise
+        # leaves everything downloaded so far invisible in Stash's UI (this
+        # is exactly what happened to Riley Reid's images during the 2026-08-24
+        # queue-congestion incident, before this fix).
+        stash.metadata_scan(paths=[str(performer_dir)])
+
 
 def main():
     json_input = json.loads(sys.stdin.read())
@@ -116,8 +124,6 @@ def main():
     for index, performer in enumerate(performers, start=1):
         log.progress(index / total if total else 1)
         processPerformer(stash, path, tag_id, performer)
-
-    stash.metadata_scan(paths=[path])
 
 
 if __name__ == "__main__":

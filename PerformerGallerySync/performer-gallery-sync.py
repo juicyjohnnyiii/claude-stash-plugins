@@ -89,6 +89,18 @@ def processPerformer(performer):
         log.debug(sid)
         processPerformerStashid(sid["endpoint"], sid["stash_id"], performer)
 
+    # Scan + relink after each performer instead of only once at the very
+    # end of a multi-performer run - a crash/interrupt partway through
+    # otherwise leaves everything downloaded so far invisible in Stash's UI
+    # (this is exactly what happened to Riley Reid's images during the
+    # 2026-08-24 queue-congestion incident, before this fix).
+    stash.metadata_scan(paths=[str(dir)])
+    stash.run_plugin_task(
+        "performerGallerySync",
+        "relink missing images",
+        args={"performer_id": performer["id"]},
+    )
+
 
 def get_stashbox(endpoint):
     for sbx_config in stash.get_configuration()["general"]["stashBoxes"]:
@@ -390,8 +402,6 @@ def processQueue():
         == settings["queue"]
     ):
         stash.configure_plugin("performerGallerySync", {"queue": ""})
-        stash.metadata_scan(paths=[settings["path"]])
-        stash.run_plugin_task("performerGallerySync", "relink missing images")
     else:
         # update remove the completed entries from the queue string leaving the unprocessed and schedule the task again
         log.debug("updating queue")
@@ -478,18 +488,8 @@ if "mode" in json_input["args"]:
         p = stash.find_performer(json_input["args"]["performer"])
         if tag_stashbox_performer_gallery in [x["id"] for x in p["tags"]]:
             processPerformer(p)
-            stash.metadata_scan(paths=[settings["path"]])
-            stash.run_plugin_task(
-                "performerGallerySync",
-                "relink missing images",
-                args={"performer_id": p["id"]},
-            )
     elif "processPerformers" in PLUGIN_ARGS:
         processPerformers()
-        stash.metadata_scan([settings["path"]])
-        stash.run_plugin_task(
-            "performerGallerySync", "relink missing images", args={}
-        )
     elif "processImages" in PLUGIN_ARGS:
         if "performer_id" in json_input["args"]:
             relink_images(performer_id=json_input["args"]["performer_id"])

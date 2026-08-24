@@ -11,10 +11,10 @@
   name: Performer Gallery Sync
   metadata:
     description: Fork of stashdb-performer-gallery with custom tag names ([Performer Gallery Sync] / [Set Profile Pic] instead of the originals) - downloads performer images from configured stash-boxes into a gallery.
-  version: 0.3.2
-  date: 2026-08-24 08:30:00
+  version: 0.3.3
+  date: 2026-08-24 09:08:00
   path: PerformerGallerySync.zip
-  sha256: 39a0c7411d2d16d18e89257873b3527ae4ef20ede82b1ab2d2159aa7c4dfb94c
+  sha256: fe9bdf47c885bb71836f0ae7864776a35ccbea4a65837e61ca4f0b596413a429
 
 - id: PerformerImageSearch
   name: Performer Image Search
@@ -40,7 +40,7 @@
   name: PornGals4 Gallery Sync
   metadata:
     description: Fork of Serechops' performerGallery scraper for porngals4.com - rewired into the shared Performer Gallery Sync folder/tag/gallery system instead of standalone zip files, opt-in via the [Performer Gallery Sync] tag.
-  version: 1.0.0
-  date: 2026-08-23 16:15:00
+  version: 1.0.1
+  date: 2026-08-24 09:08:00
   path: PornGals4GallerySync.zip
-  sha256: 582ee0262fa319be112cbfb123b77d48a5aaee8362a6cb390848b1d87c5ecb07
+  sha256: f1b4d35bad15a767b349657eab521e9f6c4a34db2fea618c625bc8d6b3ab064d
